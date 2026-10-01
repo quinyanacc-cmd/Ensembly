@@ -1,0 +1,17 @@
+{
+  "name": "Ensembly",
+  "short_name": "Ensembly",
+  "description": "Ensembly 6.4.1 – Aktivitäten, flexible Tagesrollen und persönliche Rückblicke – lokal auf dem Gerät",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
