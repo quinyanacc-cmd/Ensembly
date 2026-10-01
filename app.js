@@ -760,7 +760,7 @@ const ACTIVITY_TEMPLATES = [
 ];
 
 function allActivityTemplates() {
-  return [...ACTIVITY_TEMPLATES.filter(item => item.key !== "custom"), ...customActivityTemplates, activityTemplate("custom")];
+  return [...ACTIVITY_TEMPLATES.filter(item => item.key !== "custom" && !hiddenActivityTemplates.includes(item.key)), ...customActivityTemplates, activityTemplate("custom")];
 }
 
 function activityTemplate(key) {
@@ -883,7 +883,7 @@ function dayPointTotal(data, date) {
 }
 
 
-const APP_VERSION = "6.4.1";
+const APP_VERSION = "6.4.2";
 const SCHEMA_VERSION = 8;
 const STORAGE_NAMESPACE = "roleplay-v25";
 const ROUTINES_STORAGE_KEY = `${STORAGE_NAMESPACE}-routines`;
@@ -895,6 +895,8 @@ const $ = id => document.getElementById(id);
 
 const ACTIVITY_TEMPLATES_STORAGE_KEY = `${STORAGE_NAMESPACE}-activity-templates`;
 let customActivityTemplates = [];
+let hiddenActivityTemplates = [];
+const HIDDEN_TEMPLATES_KEY = `${STORAGE_NAMESPACE}-hidden-templates`;
 
 function normalizeActivityTemplates(raw) {
   const seen = new Set();
@@ -909,6 +911,8 @@ function normalizeActivityTemplates(raw) {
 }
 
 function loadActivityTemplates() {
+  hiddenActivityTemplates = safeParse(localStorage.getItem(HIDDEN_TEMPLATES_KEY), []);
+  if (!Array.isArray(hiddenActivityTemplates)) hiddenActivityTemplates = [];
   customActivityTemplates = normalizeActivityTemplates(safeParse(localStorage.getItem(ACTIVITY_TEMPLATES_STORAGE_KEY), []));
 }
 
@@ -923,23 +927,31 @@ function renderActivityTemplateOptions(selected = $("activityTemplate")?.value |
   }
   const editing = $("templateToEdit")?.value || "";
   if ($("templateToEdit")) {
-    $("templateToEdit").innerHTML = `<option value="">Neue Vorlage …</option>` + customActivityTemplates.map(item => `<option value="${escapeHTML(item.key)}">${escapeHTML(item.label)}</option>`).join("");
-    $("templateToEdit").value = customActivityTemplates.some(item => item.key === editing) ? editing : "";
+    $("templateToEdit").innerHTML = `<option value="">Neue Vorlage …</option>` + allActivityTemplates().filter(item => item.key !== "custom").map(item => `<option value="${escapeHTML(item.key)}">${escapeHTML(item.label)}</option>`).join("");
+    $("templateToEdit").value = allActivityTemplates().some(item => item.key === editing) ? editing : "";
   }
 }
 
 function fillActivityTemplateEditor() {
-  const template = customActivityTemplates.find(item => item.key === $("templateToEdit").value);
+  const template = activityTemplate($("templateToEdit").value);
   $("templateTitle").value = template?.title || "";
   $("templateTitle").setCustomValidity("");
   $("templatePoints").setCustomValidity("");
   $("templateRole").value = template?.role || currentData?.role || ROLES[0].name;
-  $("templatePoints").value = template?.weight ?? 1;
+  const weight = template?.weight ?? 1;
+  $("templatePoints").innerHTML = Array.from({length:200}, (_,i) => { const n=(i+1)/2; return `<option value="${n}">${String(n).replace('.', ',')} Punkte</option>`; }).join('') + (weight % .5 ? `<option value="${weight}">${String(weight).replace('.', ',')} Punkte (bisher)</option>` : '');
+  $("templatePoints").value = weight;
+  const builtin = template && !template.key.startsWith('user_');
+  $("templateTitle").disabled = Boolean(builtin);
+  $("templateRole").disabled = Boolean(builtin);
+  $("templatePoints").disabled = Boolean(builtin);
+  $("saveActivityTemplate").hidden = Boolean(builtin);
   $("deleteActivityTemplate").hidden = !template;
   $("templateEditorStatus").textContent = "";
 }
 
 function saveActivityTemplateFromEditor() {
+  if ($( "templateToEdit").value && !$("templateToEdit").value.startsWith("user_")) return;
   const title = $("templateTitle").value.trim();
   const weight = Number($("templatePoints").value);
   $("templateTitle").setCustomValidity(title ? "" : "Bitte einen Namen eingeben.");
@@ -960,8 +972,9 @@ function saveActivityTemplateFromEditor() {
 
 function deleteActivityTemplateFromEditor() {
   const key = $("templateToEdit").value;
-  const template = customActivityTemplates.find(item => item.key === key);
+  const template = activityTemplate(key);
   if (!template || !confirm(`Vorlage „${template.title}“ löschen? Bisherige Aktivitäten bleiben erhalten.`)) return;
+  if (!key.startsWith("user_")) { hiddenActivityTemplates.push(key); localStorage.setItem(HIDDEN_TEMPLATES_KEY, JSON.stringify(hiddenActivityTemplates)); }
   customActivityTemplates = customActivityTemplates.filter(item => item.key !== key);
   saveActivityTemplates();
   renderActivityTemplateOptions("custom");
@@ -1128,7 +1141,7 @@ function roleSpeechText(roleName, date = selectedDate) {
 function updateHeaderRoleUI(role = getRole(currentData?.role)) {
   const hasRole = Boolean(currentData?.role);
   if ($("roleHeroIcon")) { $("roleHeroIcon").textContent = hasRole ? role.emoji : ""; $("roleHeroIcon").hidden = !hasRole; }
-  if ($("roleHeroName")) $("roleHeroName").textContent = hasRole ? roleDisplayName(role.name) : "Offener Tag";
+  if ($("roleHeroName")) { $("roleHeroName").textContent = hasRole ? roleDisplayName(role.name) : ""; $("rolePickerWrap").hidden = !hasRole; }
   if ($("mascotQuote")) $("mascotQuote").textContent = hasRole ? roleSpeechText(role.name) : "Dein Tag darf sich entwickeln. Deine Aktivitäten zeigen, was heute im Vordergrund steht.";
   if ($("roleMascotImage")) {
     $("roleMascotImage").src = ROLE_MASCOT_IMAGES[role.name] || ROLE_MASCOT_IMAGES["Ich-Person"];
@@ -1373,18 +1386,47 @@ function normalizeReview(raw, date, hasStoredValue) {
     const old = raw?.streaks?.[streak.key];
     if (old && typeof old === "object") {
       const broken = Boolean(old.broken || old.status === "broken" || old.todayStatus === "lapse");
-      merged.streaks[streak.key] = { days: Math.max(0, Number(old.days || 0)), broken, todayStatus: STREAK_DAILY_STATES[old.todayStatus] ? old.todayStatus : (broken ? "lapse" : "") };
+      merged.streaks[streak.key] = { ...old, days: Math.max(0, Number(old.days || 0)), broken, todayStatus: STREAK_DAILY_STATES[old.todayStatus] ? old.todayStatus : (broken ? "lapse" : "") };
     } else if (!merged.streaks[streak.key]) {
-      merged.streaks[streak.key] = { days: 0, broken: false, todayStatus: "" };
+      merged.streaks[streak.key] = { ...old, days: 0, broken: false, todayStatus: "" };
     }
   });
   return merged;
 }
 
+function calendarDayDistance(from, to) {
+  return Math.round((Date.parse(to + 'T12:00:00Z') - Date.parse(from + 'T12:00:00Z')) / 86400000);
+}
+function streaksForDate(date) {
+  const rows = [];
+  for (let i=0; i<localStorage.length; i++) {
+    const key=localStorage.key(i);
+    const day=key?.startsWith(STORAGE_NAMESPACE+'-review-') ? key.slice(STORAGE_NAMESPACE.length+8) : '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day) && day<=date) rows.push({date:day,data:safeParse(localStorage.getItem(key),{})});
+  }
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+  return Object.fromEntries(STREAKS.map(streak=> {
+    let days=0, started=false, status='', broken=false;
+    rows.forEach(row=> {
+      const old=row.data?.streaks?.[streak.key]; if (!old) return;
+      const delta=calendarDayDistance(row.date,date);
+      const lapse=old.todayStatus==='lapse'||old.broken||old.status==='broken';
+      if (lapse) { days=delta; started=true; }
+      else if (old.counterEvent==='set') { days=Math.max(0,Number(old.days)||0)+delta; started=true; }
+      else if (!old.calendarCounter && Number(old.days)>0) { days=Math.max(days,Number(old.days)+delta); started=true; }
+      if (row.date===date) { status=old.todayStatus||''; broken=Boolean(lapse); }
+    });
+    return [streak.key,{days:started?days:0,broken,todayStatus:status,calendarCounter:true}];
+  }));
+}
 function loadReview(date) {
   const rawText = localStorage.getItem(storageKey(date));
   const raw = rawText ? safeParse(rawText, {}) : {};
-  return normalizeReview(raw, date, Boolean(rawText));
+  const result=normalizeReview(raw,date,Boolean(rawText));
+  result.streaks=streaksForDate(date);
+  // Keep explicit counter corrections when saving an already stored day.
+  STREAKS.forEach(streak=>{ if(raw.streaks?.[streak.key]?.counterEvent) result.streaks[streak.key].counterEvent=raw.streaks[streak.key].counterEvent; });
+  return result;
 }
 
 function collectForm() {
@@ -2199,20 +2241,8 @@ function prayerStateMeta(value) {
 }
 
 function prayerStateTheme(value) {
-  switch (value) {
-    case "Normal":
-      return { a: "#6A76F8", b: "#5BA2FF", softA: .16, softB: .13, glow: .26 };
-    case "Gemeinschaft":
-      return { a: "#59D7F7", b: "#3FC4E8", softA: .18, softB: .14, glow: .24 };
-    case "Verspätet":
-      return { a: "#F6B14A", b: "#F08A35", softA: .18, softB: .14, glow: .24 };
-    case "Nachgeholt":
-      return { a: "#FF7A86", b: "#E05261", softA: .18, softB: .14, glow: .24 };
-    case "Nicht gebetet":
-      return { a: "#E05A66", b: "#B54A5A", softA: .18, softB: .14, glow: .18 };
-    default:
-      return { a: "#7A839A", b: "#5C6478", softA: .09, softB: .06, glow: .0 };
-  }
+ const colors = value==='Normal' ? ['#72D99B','#269B59'] : value==='Gemeinschaft' ? ['#67DDD3','#2EC4B6'] : value==='Verspätet' ? ['#B7BBC4','#747B88'] : ['#EE8993','#B54A5A'];
+ return {a:colors[0],b:colors[1],softA:.18,softB:.14,glow:.16};
 }
 
 function prayerStateIconHTML(value, size = "medium") {
@@ -2299,7 +2329,7 @@ function openPrayerDialog(prayer, kind = "obligatory") {
   $("prayerStateOptions").innerHTML = states.map(option => {
     const stateClass = (option.value || "open").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "-").replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss");
     return `
-    <button type="button" class="prayer-option state-${stateClass} ${current === option.value ? "active" : ""}" data-prayer-option="${escapeHTML(option.value)}">
+    <button type="button" class="prayer-option state-${stateClass} ${current === option.value ? "active" : ""}" data-prayer-option="${escapeHTML(option.value)}" style="--prayer-a:${prayerStateTheme(option.value).a};--prayer-b:${prayerStateTheme(option.value).b}">
       ${prayerStateIconHTML(option.value, "medium")}
       <strong>${escapeHTML(option.label)}</strong>
     </button>`;
@@ -2317,34 +2347,9 @@ function openPrayerDialog(prayer, kind = "obligatory") {
 
 
 
-function propagateStreaksForward(fromDate) {
-  let running = Object.fromEntries(STREAKS.map(streak => {
-    const state = currentData.streaks?.[streak.key] || { days: 0, broken: false, todayStatus: "" };
-    return [streak.key, { days: Number(state.days || 0), broken: Boolean(state.broken) }];
-  }));
-
-  for (let offset = 1; offset <= 3650; offset += 1) {
-    const date = addDays(fromDate, offset);
-    const rawText = localStorage.getItem(storageKey(date));
-    if (!rawText) continue;
-    const raw = safeParse(rawText);
-    if (!raw) continue;
-    raw.streaks = raw.streaks || {};
-    STREAKS.forEach(streak => {
-      const existing = raw.streaks[streak.key] || {};
-      const todayStatus = STREAK_DAILY_STATES[existing.todayStatus] ? existing.todayStatus : "";
-      const brokenHere = Boolean(existing.broken || existing.status === "broken" || todayStatus === "lapse");
-      const next = brokenHere
-        ? { days: 0, broken: true, todayStatus: "lapse" }
-        : { days: running[streak.key].broken ? 0 : running[streak.key].days + 1, broken: false, todayStatus };
-      raw.streaks[streak.key] = next;
-      running[streak.key] = next;
-    });
-    localStorage.setItem(storageKey(date), JSON.stringify(raw));
-  }
+function propagateStreaksForward() {
+  // Future days are calculated on demand. Missing reviews do not stop a streak.
 }
-
-
 
 function renderActivities() {
   const list = $("activityList");
@@ -2464,15 +2469,18 @@ function renderStreaks() {
     const state = currentData.streaks[input.dataset.streakDays];
     state.days = Math.max(0, Number(input.value || 0));
     state.broken = false;
+    state.counterEvent = "set";
     if (state.todayStatus === "lapse") state.todayStatus = "";
     saveReview(true); propagateStreaksForward(selectedDate); renderStreaks();
   }));
   document.querySelectorAll("[data-streak-daily]").forEach(button => button.addEventListener("click", () => {
     const state = currentData.streaks[button.dataset.streakKey];
-    state.todayStatus = state.todayStatus === "lapse" ? "" : "lapse";
+    const restoring = state.todayStatus === "lapse";
+    state.todayStatus = restoring ? "" : "lapse";
+    delete state.counterEvent;
     state.broken = state.todayStatus === "lapse";
     if (state.broken) state.days = 0;
-    saveReview(true); propagateStreaksForward(selectedDate); renderStreaks(); renderStats();
+    saveReview(true); currentData.streaks = loadReview(selectedDate).streaks; renderStreaks(); renderStats();
   }));
 }
 
@@ -3026,7 +3034,7 @@ function backupPayload() {
     routines,
     activityTemplates: customActivityTemplates,
     settings: {
-      weekMode
+      weekMode, hiddenActivityTemplates
     }
   };
 }
@@ -3066,6 +3074,7 @@ function importBackup(file) {
       saveActivityTemplates();
       renderActivityTemplateOptions();
     }
+    if (Array.isArray(payload?.settings?.hiddenActivityTemplates)) { hiddenActivityTemplates = payload.settings.hiddenActivityTemplates.filter(key => typeof key === "string"); localStorage.setItem(HIDDEN_TEMPLATES_KEY, JSON.stringify(hiddenActivityTemplates)); renderActivityTemplateOptions(); }
     validReviews.forEach(item => localStorage.setItem(storageKey(item.date), JSON.stringify(item.data)));
     if (payload.routines) {
       routines = normalizeRoutines(payload.routines);
@@ -3328,6 +3337,14 @@ function bindEvents() {
   });
   if ($("activityTemplate")) $("activityTemplate").addEventListener("change", () => applyActivityTemplate());
   $("activityTemplateForm").addEventListener("submit", event => { event.preventDefault(); saveActivityTemplateFromEditor(); });
+  const openTemplateEditor = key => {
+    $("activityTemplateEditor").open = true;
+    $("templateToEdit").value = key === 'custom' ? '' : key;
+    fillActivityTemplateEditor();
+    $("templateToEdit").focus();
+  };
+  $("newActivityTemplate").addEventListener("click", () => openTemplateEditor(''));
+  $("manageActivityTemplate").addEventListener("click", () => openTemplateEditor($("activityTemplate").value));
   $("templateToEdit").addEventListener("change", fillActivityTemplateEditor);
   $("templateTitle").addEventListener("input", () => $("templateTitle").setCustomValidity(""));
   $("templatePoints").addEventListener("input", () => $("templatePoints").setCustomValidity(""));
@@ -3723,3 +3740,13 @@ function bindWeekSwipe() {
 
   area.addEventListener("pointercancel", () => { active = false; });
 }
+
+// Resume today's view after a date change while the PWA was in the background.
+let lastVisibleDay = todayISO();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  const now = todayISO();
+  if (now !== lastVisibleDay && selectedDate === lastVisibleDay) setDate(now);
+  else if (currentData) { currentData.streaks = loadReview(selectedDate).streaks; renderStreaks(); }
+  lastVisibleDay = now;
+});

@@ -1,7 +1,7 @@
 {
   "name": "Ensembly",
   "short_name": "Ensembly",
-  "description": "Ensembly 6.4.1 – Aktivitäten, flexible Tagesrollen und persönliche Rückblicke – lokal auf dem Gerät",
+  "description": "Ensembly 6.4.2 – Aktivitäten, flexible Tagesrollen und persönliche Rückblicke – lokal auf dem Gerät",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

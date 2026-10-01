@@ -67,8 +67,8 @@ const click=id=>byId(id).click();
 const query=(selector,fn)=>document.querySelectorAll(selector).find(fn);
 app.init();
 const day=app.todayISO();
-check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.4.1');
-check('Der leere Tag bleibt offen',byId('roleHeroName').textContent==='Offener Tag');
+check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.4.2');
+check('Der leere Tag bleibt offen',byId('roleHeroName').textContent===''&&byId('rolePickerWrap').hidden);
 check('Fünf Check-ins sind bedienbar',byId('checkinSlots').querySelectorAll('[data-open-checkin-slot]').length===5);
 query('[data-open-checkin-slot]',e=>e.dataset.openCheckinSlot==='morning').click();
 check('Morgen-Check-in öffnet den Dialog',byId('stateCheckinDialog').open);
@@ -77,7 +77,7 @@ check('Check-in speichert Gottesfurcht',evaluate('currentData.stateCheckins[0].t
 query('[data-open-prayer]',e=>e.dataset.openPrayer==='Fajr').click();
 query('[data-prayer-option]',e=>e.dataset.prayerOption==='Normal').click();
 check('Pflichtgebet wird gespeichert',evaluate('currentData.prayers.Fajr')==='Normal');
-check('Pflichtgebet erzeugt keine Tagesrolle',byId('roleHeroName').textContent==='Offener Tag');
+check('Pflichtgebet erzeugt keine Tagesrolle',byId('roleHeroName').textContent===''&&byId('rolePickerWrap').hidden);
 query('[data-routine-cycle]',e=>e.dataset.routineCycle==='morning').click();
 check('Routinekarte wechselt auf erledigt',evaluate('currentData.morningRoutineState')==='done');
 query('[data-routine-cycle]',e=>e.dataset.routineCycle==='morning').click();
@@ -108,6 +108,15 @@ check('Backup-Import erhält Vorlagen und historische Punkte',app.activityTempla
 click('addActivity');byId('templateToEdit').value=ownKey;byId('templateToEdit').dispatch('change');click('deleteActivityTemplate');
 check('Vorlagenlöschung erhält historische Aktivitäten',!app.activityTemplate(ownKey)&&evaluate('currentData.activities[0].weight')===3);
 click('cancelActivity');
+click('addActivity');byId('activityTemplate').value='gym';click('manageActivityTemplate');
+check('Ausgewählte Vorlage lässt sich direkt verwalten',byId('activityTemplateEditor').open&&byId('templateToEdit').value==='gym');
+click('deleteActivityTemplate');
+check('Vorgegebene Vorlage kann entfernt werden',!app.allActivityTemplates().some(item=>item.key==='gym')&&Boolean(app.activityTemplate('gym')));
+app.exportBackup();check('Entfernte Vorlagen werden im Backup gespeichert',JSON.parse(files.at(-1).text).settings.hiddenActivityTemplates.includes('gym'));
+click('newActivityTemplate');
+check('Neue Vorlage öffnet einen leeren Editor',byId('templateToEdit').value===''&&!byId('templateTitle').disabled);
+check('Punkteauswahl enthält halbe Schritte',byId('templatePoints').innerHTML.includes('value="0.5"')&&byId('templatePoints').innerHTML.includes('value="1.5"'));
+click('cancelActivity');
 const month=app.previousMonth(day.slice(0,7));
 for(let i=0;i<12;i++){
  const date=app.addDays(`${month}-01`,i);
@@ -128,13 +137,26 @@ check('Geschützte Streaks bleiben zugänglich',byId('streaksPage').classes.has(
 query('.nav-button',e=>e.dataset.page==='review').click();
 check('Rückkehr zur Hauptseite funktioniert',byId('reviewPage').classes.has('active')&&!byId('appHeader').hidden);
 if (process.argv[2]) {
+ localStorage.clear();
  const legacy=JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
  app.importBackup({contents:JSON.stringify(legacy)});
  check('Altes Backup importiert alle Tagesdaten unverändert',legacy.reviews.every(item=>JSON.stringify(JSON.parse(localStorage.getItem(app.storageKey(item.date))))===JSON.stringify(item.data)));
  for(const item of legacy.reviews) app.setDate(item.date);
- check('Alle alten Tage lassen sich mit automatischer Rolle laden',byId('roleHeroName').textContent.length>0);
+ check('Alle alten Tage lassen sich mit automatischer Rolle laden',!alerts.some(text=>text.includes('Fehler')));
  app.exportBackup();const migrated=JSON.parse(files.at(-1).text);
  check('Neues Backup trägt Ensembly und erhält alle alten Tage',migrated.app==='Ensembly'&&legacy.reviews.every(item=>migrated.reviews.some(row=>row.date===item.date)));
- check('Keine Importfehler beim alten Backup',!alerts.some(text=>text.includes('keine gültigen')));
+ check('Streak läuft über acht nicht eingetragene Kalendertage',app.loadReview('2026-10-01').streaks.cannabisFree.days===189);
+ check('Am 30. September stehen 188 Cannabistage',app.loadReview('2026-09-30').streaks.cannabisFree.days===188);
+ app.setDate('2026-10-01');app.saveReview(true);app.setDate('2026-10-10');
+ check('Gespeicherte neue Tage stoppen den Zähler nicht',evaluate('currentData.streaks.cannabisFree.days')===198);
+ const interruption={streaks:{cannabisFree:{days:0,broken:true,todayStatus:'lapse',calendarCounter:true}}};
+ localStorage.setItem(app.storageKey('2026-10-05'),JSON.stringify(interruption));
+ check('Bewusste Unterbrechung setzt den Zähler zurück',app.loadReview('2026-10-05').streaks.cannabisFree.days===0&&app.loadReview('2026-10-10').streaks.cannabisFree.days===5);
+ localStorage.setItem(app.storageKey('2026-10-07'),JSON.stringify({streaks:{cannabisFree:{days:20,broken:false,calendarCounter:true,counterEvent:'set'}}}));
+ check('Manuelle Korrektur läuft nach Kalendertagen weiter',app.loadReview('2026-10-10').streaks.cannabisFree.days===23);
+ app.exportBackup();const correctedBackup=JSON.parse(files.at(-1).text);
+ localStorage.clear();app.importBackup({contents:JSON.stringify(correctedBackup)});
+ check('Korrigierte Streak bleibt nach Backup-Import erhalten',app.loadReview('2026-10-10').streaks.cannabisFree.days===23);
+ check('Keine Importfehler beim alten Backup' ,!alerts.some(text=>text.includes('keine gültigen')));
 }
 console.log(`\nALLE ${count} UI-FUNKTIONSPRÜFUNGEN BESTANDEN (DOM-Testmodell).`);

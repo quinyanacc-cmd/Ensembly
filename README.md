@@ -1,4 +1,12 @@
-# Ensembly 6.4.1
+# Ensembly 6.4.2
+
+Logo auf der Hauptseite entfernt; „Offener Tag“ wird dort nicht mehr angezeigt. Sobald Aktivitäten eine Rolle ergeben, erscheint weiterhin deren Name mit Figur und SMART-Ziel. Check-in-Skalen und Routine-Status haben wieder ihre Farben. Gebetet ist grün, Moschee türkis wie die Muslim-Rolle, verspätet grau, nachgeholt und nicht gebetet rot.
+
+Vorlagen sind direkt aus der Auswahl verwaltbar. Auch mitgelieferte Vorlagen lassen sich entfernen; historische Aktivitäten bleiben erhalten. Eigene Vorlagen wählen Punkte in 0,5er-Schritten. Abweichende bisherige Werte bleiben erhalten.
+
+Streaks laufen nach Kalendertagen über Eintragungslücken hinweg. Bewusste Unterbrechungen und manuelle Zählerkorrekturen werden berücksichtigt und bleiben im Backup erhalten. Beim Wiederöffnen nach Mitternacht wird die heutige Ansicht aktualisiert. Das alte Backup vom 23.09.2026 ergibt am 30.09.2026 188 und am 01.10.2026 189 cannabisfreie Tage (Zählweise des Backups).
+
+# Ensembly 6.4.2
 
 Neuer App-Name und originales Ensembly-Logo. Auswahlflächen und Aktionsbuttons sind schwarz. Rollenfarben und Diagramme bleiben aussagekräftig.
 
@@ -10,7 +18,7 @@ Lokale iPhone-PWA für Aktivitäten, Tages-Check-ins und persönliche Rückblick
 Alle Einträge und eigenen Vorlagen bleiben im Browser des Geräts. Keine
 Serververbindung, kein Framework und keine externen Bibliotheken.
 
-## Änderungen in 6.4.1
+## Änderungen in 6.4.2
 
 - Die Tagesrolle entsteht aus der höchsten aufsummierten Aktivitätsgewichtung.
   Es gibt keine feste Wochentagsrolle, manuelle Tagesrollenwahl oder mehrtägige
