@@ -1,4 +1,4 @@
-const CACHE = "ensembly-v6-4-2";
+const CACHE = "ensembly-v6-5-0";
 const ASSETS = [
   "./",
   "./index.html",

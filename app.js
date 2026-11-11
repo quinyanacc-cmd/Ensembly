@@ -883,7 +883,7 @@ function dayPointTotal(data, date) {
 }
 
 
-const APP_VERSION = "6.4.2";
+const APP_VERSION = "6.5.0";
 const SCHEMA_VERSION = 8;
 const STORAGE_NAMESPACE = "roleplay-v25";
 const ROUTINES_STORAGE_KEY = `${STORAGE_NAMESPACE}-routines`;
@@ -1490,6 +1490,7 @@ function setDate(date) {
 }
 
 function fillForm() {
+  fillEnhancements();
   ["breakfast", "lunch", "dinner", "snack", "water", "steps", "gratitude1", "gratitude2", "allahName", "responsibilityMain", "responsibilityAdaptation", "responsibilityNextStep"].forEach(id => {
     if ($(id)) $(id).value = currentData[id] ?? "";
   });
@@ -3034,7 +3035,7 @@ function backupPayload() {
     routines,
     activityTemplates: customActivityTemplates,
     settings: {
-      weekMode, hiddenActivityTemplates
+      weekMode, hiddenActivityTemplates, streakDefinitions: STREAKS, appearance: localStorage.getItem("ensembly-appearance")
     }
   };
 }
@@ -3075,6 +3076,7 @@ function importBackup(file) {
       renderActivityTemplateOptions();
     }
     if (Array.isArray(payload?.settings?.hiddenActivityTemplates)) { hiddenActivityTemplates = payload.settings.hiddenActivityTemplates.filter(key => typeof key === "string"); localStorage.setItem(HIDDEN_TEMPLATES_KEY, JSON.stringify(hiddenActivityTemplates)); renderActivityTemplateOptions(); }
+    if (Array.isArray(payload?.settings?.streakDefinitions)) { localStorage.setItem("ensembly-streaks", JSON.stringify(payload.settings.streakDefinitions)); loadStreakDefinitions(); }
     validReviews.forEach(item => localStorage.setItem(storageKey(item.date), JSON.stringify(item.data)));
     if (payload.routines) {
       routines = normalizeRoutines(payload.routines);
@@ -3456,6 +3458,8 @@ function setupDialogs() {
 }
 
 function init() {
+  loadStreakDefinitions();
+  setupEnhancements();
   loadActivityTemplates();
   loadWeekMode();
   analysisMonth = todayISO().slice(0, 7);
@@ -3667,6 +3671,12 @@ function renderAnalysis() {
   $("analysisPeriod").textContent = analysisPeriodLabel();
   const days = stats.entries.filter(item => (item.data.stateCheckins || []).some(entry => ["energy","mood","taqwa"].some(metric => validRecordedNumber(entry[metric])))).length;
   const activities = stats.entries.reduce((sum,item) => sum + (item.data.activities || []).length, 0);
+  if ($("analysisMetrics")) $("analysisMetrics").innerHTML = ["energy", "mood", "taqwa"].map((key, index) => {
+    const current = analysisValueDays(stats.entries, key), prior = analysisValueDays(previous, key);
+    const value = current.length ? averageOf(current.map(item => item.value)) : null;
+    const delta = value !== null && prior.length ? Math.round(value - averageOf(prior.map(item => item.value))) : null;
+    return `<div><small>${["Energie", "Laune", "Gottesfurcht"][index]}</small><strong>${value === null ? "–" : Math.round(value) + "%"}</strong><small>${delta === null ? "Kein Vergleich" : (delta > 0 ? "+" : "") + delta + " Pp. zur Vorperiode"}</small></div>`;
+  }).join("");
   $("analysisCoverage").textContent = `${days} ${days === 1 ? "Tag" : "Tage"} mit Check-ins · ${activities} ${activities === 1 ? "Aktivität" : "Aktivitäten"} erfasst`;
   document.querySelectorAll("[data-analysis-range]").forEach(button => {
     const selected = button.dataset.analysisRange === roleSplitRange;
@@ -3750,3 +3760,63 @@ document.addEventListener('visibilitychange', () => {
   else if (currentData) { currentData.streaks = loadReview(selectedDate).streaks; renderStreaks(); }
   lastVisibleDay = now;
 });
+
+
+function loadStreakDefinitions() {
+  const saved = safeParse(localStorage.getItem("ensembly-streaks"));
+  if (Array.isArray(saved)) STREAKS.splice(0, STREAKS.length, ...saved.filter(item => /^[a-zA-Z0-9_-]+$/.test(item?.key) && typeof item.label === "string").map(item => ({key: item.key, label: item.label.slice(0,80)})));
+}
+function fillEnhancements() {
+  if ($("streakDate")) $("streakDate").value = selectedDate;
+  for (const key of ["breakfast", "lunch", "dinner", "snack"]) {
+    if ($(key + "Calories")) $(key + "Calories").value = currentData.calories?.[key] ?? "";
+  }
+  if ($("calorieTarget")) $("calorieTarget").value = currentData.calorieTarget ?? "";
+  updateCalorieSummary();
+  requestAnimationFrame(() => document.querySelectorAll("textarea").forEach(growTextarea));
+}
+function growTextarea(field) { field.style.height = "auto"; field.style.height = field.scrollHeight + "px"; }
+function updateCalorieSummary() {
+  if (!$("calorieSummary")) return;
+  const values = Object.values(currentData?.calories || {}).filter(value => value !== "" && Number.isFinite(Number(value)));
+  const total = values.reduce((sum,value) => sum + Number(value), 0);
+  const target = Number(currentData?.calorieTarget);
+  $("calorieSummary").textContent = values.length ? `${total} kcal erfasst` + (target > 0 ? ` · ${target - total >= 0 ? target - total + " kcal übrig" : total - target + " kcal über dem Ziel"}` : "") : "Noch keine Kalorien erfasst";
+}
+function setupEnhancements() {
+  const appearance = $("appearance");
+  function applyAppearance() {
+    const setting = localStorage.getItem("ensembly-appearance") || "system";
+    document.documentElement.dataset.theme = setting === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : setting;
+    if (appearance) appearance.value = setting;
+  }
+  if (appearance) {
+    appearance.addEventListener("change", () => { localStorage.setItem("ensembly-appearance", appearance.value); applyAppearance(); });
+    applyAppearance();
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyAppearance);
+  }
+  $("streakDate")?.addEventListener("change", event => { if (event.target.value) setDate(event.target.value); });
+  $("streakPrevious")?.addEventListener("click", () => setDate(addDays(selectedDate,-1)));
+  $("streakNext")?.addEventListener("click", () => setDate(addDays(selectedDate,1)));
+  $("addStreak")?.addEventListener("click", () => {
+    const name = prompt("Name des neuen Streaks"); if (!name?.trim()) return;
+    const key = "custom_" + Date.now();
+    STREAKS.push({key, label:name.trim().slice(0,80)});
+    localStorage.setItem("ensembly-streaks",JSON.stringify(STREAKS));
+    currentData.streaks[key] = {days:0, counterEvent:"set", calendarCounter:true, broken:false, todayStatus:""};
+    saveReview(true); renderStreaks();
+  });
+  $("editStreaks")?.addEventListener("click", () => {
+    $("streakEditorList").innerHTML = STREAKS.map(item => `<div class="streak-edit-row"><input aria-label="Streakname" maxlength="80" data-rename-streak="${item.key}" value="${escapeHTML(item.label)}"><button type="button" class="secondary-button" data-remove-streak="${item.key}">Entfernen</button></div>`).join("");
+    $("streakEditor").showModal();
+    document.querySelectorAll("[data-rename-streak]").forEach(input => input.addEventListener("change", () => { const item = STREAKS.find(item => item.key === input.dataset.renameStreak); if(input.value.trim()) item.label = input.value.trim(); localStorage.setItem("ensembly-streaks",JSON.stringify(STREAKS)); renderStreaks(); }));
+    document.querySelectorAll("[data-remove-streak]").forEach(button => button.addEventListener("click", () => { if (!confirm("Streak aus der Liste entfernen? Bisherige Tagesdaten bleiben gespeichert.")) return; STREAKS.splice(STREAKS.findIndex(item => item.key === button.dataset.removeStreak),1); localStorage.setItem("ensembly-streaks",JSON.stringify(STREAKS)); button.parentElement.remove(); renderStreaks(); }));
+  });
+  document.querySelectorAll("textarea").forEach(field => field.addEventListener("input", () => growTextarea(field)));
+  document.querySelectorAll("[data-calorie]").forEach(input => input.addEventListener("change", () => {
+    currentData.calories ||= {};
+    currentData.calories[input.dataset.calorie] = input.value === "" ? "" : Math.max(0,Number(input.value)||0);
+    saveReview(true); updateCalorieSummary();
+  }));
+  $("calorieTarget")?.addEventListener("change", event => { currentData.calorieTarget = Math.max(0,Number(event.target.value)||0); saveReview(true); updateCalorieSummary(); });
+}

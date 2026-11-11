@@ -55,7 +55,7 @@ const data=new Map();
 const localStorage={get length(){return data.size;},key:i=>[...data.keys()][i]??null,getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,String(value)),removeItem:key=>data.delete(key),clear:()=>data.clear()};
 const alerts=[];
 const context={console,Date,Intl,Math,JSON,Object,Array,Number,String,Boolean,Set,Map,isNaN,parseInt,parseFloat,document,localStorage,navigator:{},
- window:{scrollTo(){},addEventListener(){},innerHeight:844,scrollY:0,visualViewport:null},setTimeout(){return 0;},clearTimeout(){},alert:text=>alerts.push(text),confirm:()=>true,
+ requestAnimationFrame:fn=>fn(), window:{matchMedia:()=>({matches:false,addEventListener(){}}),scrollTo(){},addEventListener(){},innerHeight:844,scrollY:0,visualViewport:null},setTimeout(){return 0;},clearTimeout(){},alert:text=>alerts.push(text),confirm:()=>true,
  URL:{createObjectURL:()=>"blob:test",revokeObjectURL(){}},Blob:class{constructor(parts){this.parts=parts;}},
  FileReader:class{readAsText(file){this.result=file.contents;this.onload();}}};
 vm.createContext(context);vm.runInContext(source,context);
@@ -67,7 +67,7 @@ const click=id=>byId(id).click();
 const query=(selector,fn)=>document.querySelectorAll(selector).find(fn);
 app.init();
 const day=app.todayISO();
-check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.4.2');
+check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.5.0');
 check('Der leere Tag bleibt offen',byId('roleHeroName').textContent===''&&byId('rolePickerWrap').hidden);
 check('Fünf Check-ins sind bedienbar',byId('checkinSlots').querySelectorAll('[data-open-checkin-slot]').length===5);
 query('[data-open-checkin-slot]',e=>e.dataset.openCheckinSlot==='morning').click();

@@ -1,3 +1,9 @@
+# Ensembly 6.5.0
+
+Streaks hinzufügen, umbenennen und ausblenden. Historische Tagesdaten bleiben erhalten. Kalorien pro Mahlzeit und optionales Tagesziel. Darstellung System/Hell/Dunkel. Datumauswahl bei Streaks. Mitwachsender Dankbarkeitstext. Kompakter Aktivitäteneditor. Kennzahlen mit Vorperiodenvergleich.
+
+Prüfung dieser Version: 201 Berechnungsprüfungen und 32 DOM-Bedienprüfungen bestanden. Visuelle Browserprüfung durch Laufzeitbeschränkung blockiert. Kein iPhone-Gerätetest.
+
 # Ensembly 6.4.2
 
 Logo auf der Hauptseite entfernt; „Offener Tag“ wird dort nicht mehr angezeigt. Sobald Aktivitäten eine Rolle ergeben, erscheint weiterhin deren Name mit Figur und SMART-Ziel. Check-in-Skalen und Routine-Status haben wieder ihre Farben. Gebetet ist grün, Moschee türkis wie die Muslim-Rolle, verspätet grau, nachgeholt und nicht gebetet rot.

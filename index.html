@@ -84,25 +84,25 @@
           
 
           <div class="meal-list">
-              <div class="meal-entry" data-meal-entry="breakfast">
+              <label for="calorieTarget">Kalorienziel für diesen Tag</label><input id="calorieTarget" type="number" min="0" inputmode="numeric" placeholder="Optional, in kcal"><p id="calorieSummary" role="status"></p><div class="meal-entry" data-meal-entry="breakfast">
                 <strong>Frühstück</strong>
                 <select id="breakfastCategory" class="meal-category-select" aria-label="Kategorie Frühstück"></select>
-                <input id="breakfast" placeholder="Optional: Was war es konkret?">
+                <input id="breakfast" placeholder="Optional: Was war es konkret?"><input id="breakfastCalories" data-calorie="breakfast" type="number" min="0" inputmode="numeric" placeholder="kcal" aria-label="Kalorien breakfast">
               </div>
               <div class="meal-entry" data-meal-entry="lunch">
                 <strong>Mittagessen</strong>
                 <select id="lunchCategory" class="meal-category-select" aria-label="Kategorie Mittagessen"></select>
-                <input id="lunch" placeholder="Optional: Was war es konkret?">
+                <input id="lunch" placeholder="Optional: Was war es konkret?"><input id="lunchCalories" data-calorie="lunch" type="number" min="0" inputmode="numeric" placeholder="kcal" aria-label="Kalorien lunch">
               </div>
               <div class="meal-entry" data-meal-entry="dinner">
                 <strong>Abendessen</strong>
                 <select id="dinnerCategory" class="meal-category-select" aria-label="Kategorie Abendessen"></select>
-                <input id="dinner" placeholder="Optional: Was war es konkret?">
+                <input id="dinner" placeholder="Optional: Was war es konkret?"><input id="dinnerCalories" data-calorie="dinner" type="number" min="0" inputmode="numeric" placeholder="kcal" aria-label="Kalorien dinner">
               </div>
               <div class="meal-entry" data-meal-entry="snack">
                 <strong>Snacks</strong>
                 <select id="snackCategory" class="meal-category-select" aria-label="Kategorie Snacks"></select>
-                <input id="snack" placeholder="Optional: Was war es konkret?">
+                <input id="snack" placeholder="Optional: Was war es konkret?"><input id="snackCalories" data-calorie="snack" type="number" min="0" inputmode="numeric" placeholder="kcal" aria-label="Kalorien snack">
               </div>
           </div>
 
@@ -166,7 +166,7 @@
         </details>
 
         <section class="card">
-          <h2>Export & Sicherung</h2>
+          <label for="appearance">Darstellung</label><select id="appearance"><option value="system">System</option><option value="light">Hell</option><option value="dark">Dunkel</option></select><h2>Export & Sicherung</h2>
           <div class="export-buttons">
             <button id="exportBackup" class="small-button export-button" type="button">Backup speichern</button>
             <button id="importBackupButton" class="small-button export-button" type="button">Backup importieren</button>
@@ -194,7 +194,7 @@
           <p id="analysisCoverage" class="analysis-coverage"></p>
         </div>
         <section class="card analysis-observations" aria-label="Beobachtungen zu deinem Befinden">
-          <div id="analysisOverview" class="analysis-insights"></div>
+          <div id="analysisMetrics" class="analysis-metrics"></div><div id="analysisOverview" class="analysis-insights"></div>
         </section>
         <section class="card analysis-connections" aria-label="Zusammenhänge im dokumentierten Alltag">
           <p class="section-caption">Zusammenhänge</p>
@@ -217,7 +217,7 @@
       </section>
 
       <section id="streaksPage" class="app-page" aria-label="Streaks">
-        <div id="streakList" class="stack streak-list streaks-page-list"></div>
+        <div class="streak-date"><button id="streakPrevious" class="icon-button" aria-label="Vorheriger Tag">‹</button><input id="streakDate" type="date" aria-label="Streakdatum"><button id="streakNext" class="icon-button" aria-label="Nächster Tag">›</button></div><div id="streakList" class="stack streak-list streaks-page-list"></div><div class="dialog-actions"><button id="addStreak" class="primary-button">Streak hinzufügen</button><button id="editStreaks" class="secondary-button">Streaks bearbeiten</button></div>
       </section>
     </main>
 
@@ -322,6 +322,7 @@
     </div>
   </dialog>
 
+  <dialog id="streakEditor" class="form-dialog"><h3>Streaks bearbeiten</h3><div id="streakEditorList"></div><form method="dialog"><button class="primary-button">Fertig</button></form></dialog>
   <dialog id="activityDialog" class="form-dialog">
     <form id="activityForm">
       <h3>Aktivität hinzufügen</h3>
@@ -329,7 +330,7 @@
       <select id="activityTemplate"></select>
       <div class="template-shortcuts">
         <button id="newActivityTemplate" type="button" class="text-button">Neue Vorlage</button>
-        <button id="manageActivityTemplate" type="button" class="text-button">Ausgewählte Vorlage verwalten</button>
+        <button id="manageActivityTemplate" type="button" class="text-button">Bearbeiten</button>
       </div>
       <label for="activityTitle">Aktivität</label>
       <input id="activityTitle" required placeholder="z. B. Arabisch lernen">
@@ -343,7 +344,7 @@
       </div>
     </form>
       <details id="activityTemplateEditor" class="template-editor">
-        <summary>Vorlagen erstellen, bearbeiten oder entfernen</summary>
+        <summary>Vorlagen verwalten</summary>
         <form id="activityTemplateForm">
         <label for="templateToEdit" >Vorlage auswählen</label>
         <select id="templateToEdit"></select>
