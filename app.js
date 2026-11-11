@@ -883,7 +883,7 @@ function dayPointTotal(data, date) {
 }
 
 
-const APP_VERSION = "6.5.1";
+const APP_VERSION = "6.5.2";
 const SCHEMA_VERSION = 8;
 const STORAGE_NAMESPACE = "roleplay-v25";
 const ROUTINES_STORAGE_KEY = `${STORAGE_NAMESPACE}-routines`;
@@ -1069,13 +1069,13 @@ function roleDisplayName(name) {
 /* Originale in voller Auflösung. Alle Dateien liegen neben index.html und
    werden für die Offline-Nutzung vom Service Worker vorgeladen. */
 const ROLE_MASCOT_IMAGES = {
-  "Ich-Person": "mascot-ich.jpeg",
-  "Vitalist": "mascot-vitalist.jpeg",
-  "Absolvent": "mascot-absolvent.jpeg",
-  "Unternehmer": "mascot-unternehmer.jpeg",
-  "Muslim": "mascot-muslim.jpeg",
-  "Wirt": "mascot-wirt.jpeg",
-  "Familienmensch": "mascot-familie.jpeg"
+  "Ich-Person": "mascot-ich.webp",
+  "Vitalist": "mascot-vitalist.webp",
+  "Absolvent": "mascot-absolvent.webp",
+  "Unternehmer": "mascot-unternehmer.webp",
+  "Muslim": "mascot-muslim.webp",
+  "Wirt": "mascot-wirt.webp",
+  "Familienmensch": "mascot-familie.webp"
 };
 
 const ROLE_SPEECHES = {
@@ -1138,21 +1138,13 @@ function roleSpeechText(roleName, date = selectedDate) {
   return lines[hash % lines.length];
 }
 
-function updateMascotImage(role = getRole(currentData?.role)) {
-  const image = $("roleMascotImage");
-  if (!image) return;
-  const original = ROLE_MASCOT_IMAGES[role.name] || ROLE_MASCOT_IMAGES["Ich-Person"];
-  const dark = document.documentElement.dataset.theme === "dark";
-  image.src = dark ? original.replace(".jpeg", "-dark.webp") : original;
-}
-
 function updateHeaderRoleUI(role = getRole(currentData?.role)) {
   const hasRole = Boolean(currentData?.role);
   if ($("roleHeroIcon")) { $("roleHeroIcon").textContent = hasRole ? role.emoji : ""; $("roleHeroIcon").hidden = !hasRole; }
   if ($("roleHeroName")) { $("roleHeroName").textContent = hasRole ? roleDisplayName(role.name) : ""; $("rolePickerWrap").hidden = !hasRole; }
   if ($("mascotQuote")) $("mascotQuote").textContent = hasRole ? roleSpeechText(role.name) : "Dein Tag darf sich entwickeln. Deine Aktivitäten zeigen, was heute im Vordergrund steht.";
   if ($("roleMascotImage")) {
-    updateMascotImage(role);
+    $("roleMascotImage").src = ROLE_MASCOT_IMAGES[role.name] || ROLE_MASCOT_IMAGES["Ich-Person"];
     $("roleMascotImage").alt = hasRole ? `${roleDisplayName(role.name)}-Maskottchen` : "";
   }
 }
@@ -3243,7 +3235,10 @@ function switchPage(page, options = {}) {
   $("analysisPage").classList.toggle("active", page === "analysis");
   $("streaksPage").classList.toggle("active", page === "streaks");
   $("pageTitle").textContent = titles[page] || "Ensembly";
-  $("appHeader").hidden = page !== "review";
+  const header = $("appHeader");
+  header.hidden = page !== "review" && page !== "streaks";
+  header.classList.toggle("date-only", page === "streaks");
+  $("headerHero").hidden = page !== "review";
   document.querySelectorAll(".nav-button").forEach(button => button.classList.toggle("active", button.dataset.page === page));
   if (page === "analysis") renderAnalysis();
   if (page === "streaks") renderStreaks();
@@ -3775,7 +3770,6 @@ function loadStreakDefinitions() {
   if (Array.isArray(saved)) STREAKS.splice(0, STREAKS.length, ...saved.filter(item => /^[a-zA-Z0-9_-]+$/.test(item?.key) && typeof item.label === "string").map(item => ({key: item.key, label: item.label.slice(0,80)})));
 }
 function fillEnhancements() {
-  if ($("streakDate")) $("streakDate").value = selectedDate;
   for (const key of ["breakfast", "lunch", "dinner", "snack"]) {
     if ($(key + "Calories")) $(key + "Calories").value = currentData.calories?.[key] ?? "";
   }
@@ -3798,7 +3792,6 @@ function setupEnhancements() {
     document.documentElement.dataset.theme = setting === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : setting;
     const dark = document.documentElement.dataset.theme === "dark";
     $("themeColor")?.setAttribute("content", dark ? "#111214" : "#ffffff");
-    updateMascotImage();
     if (appearance) appearance.value = setting;
   }
   if (appearance) {
@@ -3806,9 +3799,6 @@ function setupEnhancements() {
     applyAppearance();
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyAppearance);
   }
-  $("streakDate")?.addEventListener("change", event => { if (event.target.value) setDate(event.target.value); });
-  $("streakPrevious")?.addEventListener("click", () => setDate(addDays(selectedDate,-1)));
-  $("streakNext")?.addEventListener("click", () => setDate(addDays(selectedDate,1)));
   $("addStreak")?.addEventListener("click", () => {
     const name = prompt("Name des neuen Streaks"); if (!name?.trim()) return;
     const key = "custom_" + Date.now();

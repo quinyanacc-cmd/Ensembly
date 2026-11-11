@@ -2792,6 +2792,9 @@ input:disabled { opacity: .42; }
   pointer-events: none;
 }
 
+.header-hero[hidden] { display: none; }
+.app-header.date-only::before { bottom: 0; }
+
 .date-nav {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
@@ -2968,9 +2971,6 @@ input:disabled { opacity: .42; }
   justify-self: end;
   align-self: end;
   object-fit: contain;
-  /* Die unveränderten weißen JPEG-Flächen verschmelzen mit dem Verlauf.
-     Keine Neuberechnung oder Komprimierung der Originaldateien. */
-  mix-blend-mode: multiply;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -3175,15 +3175,8 @@ input[type="range"]::-moz-range-thumb { background: #fff; border: 1px solid #ddd
 #activityTemplateEditor {margin-top:18px;font-size:14px;}
 #activityTemplateEditor summary {font-size:14px;font-weight:500;}
 textarea {resize:none;overflow:hidden;}
-.streak-date,.streak-edit-row {display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.streak-edit-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 .streak-edit-row input { min-width: 0; flex: 1; }
-.streak-date {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-}
-.streak-date .icon-button { min-height: 44px; font-size: 22px; }
-.streak-date input { min-width: 0; text-align: center; }
-.streak-date input::-webkit-date-and-time-value { text-align: center; }
 .analysis-metrics {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0;}
 .analysis-metrics>div {padding:14px 10px;background:var(--card-solid);border:1px solid var(--line);border-radius:14px;}
 .analysis-metrics strong {display:block;font-size:25px;margin:8px 0;}
@@ -3250,7 +3243,6 @@ textarea {resize:none;overflow:hidden;}
   box-shadow: none;
 }
 [data-theme="dark"] .header-impulse::after { background: var(--dark-speech); }
-[data-theme="dark"] .role-mascot-image { mix-blend-mode: normal; }
 [data-theme="dark"] .state-overview-card .stop-name,
 [data-theme="dark"] .readout-empty { color: var(--muted); }
 [data-theme="dark"] .state-overview-card :is(.is-current, .is-done) .stop-name {

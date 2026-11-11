@@ -24,7 +24,7 @@
         <button id="nextDay" class="icon-button" type="button" aria-label="Nächster Tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
       </div>
 
-      <div class="header-hero">
+      <div class="header-hero" id="headerHero">
         <div class="header-role-selector" id="rolePickerWrap" aria-live="polite">
           <span class="header-role-value">
             <span id="roleHeroIcon" class="header-role-icon" hidden></span>
@@ -33,7 +33,7 @@
           </span>
         </div>
         <p class="header-impulse" aria-live="polite"><span id="mascotQuote">Dein Tag darf sich entwickeln.</span></p>
-        <img id="roleMascotImage" class="role-mascot-image" src="mascot-ich.jpeg" width="1254" height="1254" decoding="async" fetchpriority="high" alt="" aria-hidden="true">
+        <img id="roleMascotImage" class="role-mascot-image" src="mascot-ich.webp" width="680" height="680" decoding="async" fetchpriority="high" alt="" aria-hidden="true">
       </div>
       <p id="roleTagline" class="sr-only"></p>
     </header>
@@ -217,7 +217,7 @@
       </section>
 
       <section id="streaksPage" class="app-page" aria-label="Streaks">
-        <div class="streak-date"><button id="streakPrevious" class="icon-button" aria-label="Vorheriger Tag">‹</button><input id="streakDate" type="date" aria-label="Streakdatum"><button id="streakNext" class="icon-button" aria-label="Nächster Tag">›</button></div><div id="streakList" class="stack streak-list streaks-page-list"></div><div class="dialog-actions"><button id="addStreak" class="primary-button">Streak hinzufügen</button><button id="editStreaks" class="secondary-button">Streaks bearbeiten</button></div>
+        <div id="streakList" class="stack streak-list streaks-page-list"></div><div class="dialog-actions"><button id="addStreak" class="primary-button">Streak hinzufügen</button><button id="editStreaks" class="secondary-button">Streaks bearbeiten</button></div>
       </section>
     </main>
 

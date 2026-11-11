@@ -67,7 +67,7 @@ const click=id=>byId(id).click();
 const query=(selector,fn)=>document.querySelectorAll(selector).find(fn);
 app.init();
 const day=app.todayISO();
-check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.5.1');
+check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.5.2');
 check('Der leere Tag bleibt offen',byId('roleHeroName').textContent===''&&byId('rolePickerWrap').hidden);
 check('Fünf Check-ins sind bedienbar',byId('checkinSlots').querySelectorAll('[data-open-checkin-slot]').length===5);
 query('[data-open-checkin-slot]',e=>e.dataset.openCheckinSlot==='morning').click();
@@ -89,7 +89,7 @@ check('Eigene Vorlage erscheint in der Auswahl',byId('activityTemplate').value.s
 const ownKey=byId('activityTemplate').value;
 submit('activityForm');
 check('Eigene Aktivität bestimmt Tagesrolle',byId('roleHeroName').textContent==='Absolvent');
-check('Rollenfigur und SMART-Text folgen der Rolle',byId('roleMascotImage').src==='mascot-absolvent.jpeg'&&byId('mascotQuote').textContent.includes('Inshallah'));
+check('Rollenfigur und SMART-Text folgen der Rolle',byId('roleMascotImage').src==='mascot-absolvent.webp'&&byId('mascotQuote').textContent.includes('Inshallah'));
 function addTemplate(key){click('addActivity');byId('activityTemplate').value=key;byId('activityTemplate').dispatch('change');submit('activityForm');}
 addTemplate('gym');addTemplate('gym');
 check('Punktesummen aktualisieren die Rolle',byId('roleHeroName').textContent==='Vitalist');
@@ -134,21 +134,30 @@ app.exportCsv();const rows=files.at(-1).text.split(/\r?\n/).filter(Boolean);cons
 check('CSV-Spalten bleiben nach den Entfernungen konsistent',rows.every(row=>columns(row)===columns(rows[0])));
 query('.nav-button',e=>e.dataset.page==='streaks').click();click('confirmStreakAccess');
 check('Geschützte Streaks bleiben zugänglich',byId('streaksPage').classes.has('active'));
+check('Streaks zeigen die gemeinsame Datumsleiste', !byId('appHeader').hidden && byId('headerHero').hidden);
+const originalDate = byId('dateButton').textContent;
+click('prevDay');
+check('Datumspfeile funktionieren bei Streaks', byId('dateButton').textContent !== originalDate);
+click('dateButton');
+check('Die Streak-Datumsleiste öffnet den App-Kalender', byId('calendarDialog').open);
+click('calendarToday');
+check('Der Kalender kann bei Streaks auf heute springen', !byId('calendarDialog').open && evaluate('selectedDate') === day);
 query('.nav-button',e=>e.dataset.page==='review').click();
 check('Rückkehr zur Hauptseite funktioniert',byId('reviewPage').classes.has('active')&&!byId('appHeader').hidden);
 const appearance = byId('appearance');
+const mascotBeforeAppearanceChange = byId('roleMascotImage').src;
 appearance.value = 'dark';
 appearance.dispatch('change');
-check('Dunkelmodus passt Seitenfarbe und Maskottchen an',
+check('Dunkelmodus passt die Seitenfarbe an und nutzt dieselbe Figur',
   document.documentElement.dataset.theme === 'dark'
   && byId('themeColor').attrs.content === '#111214'
-  && byId('roleMascotImage').src.endsWith('-dark.webp'));
+  && byId('roleMascotImage').src === mascotBeforeAppearanceChange);
 appearance.value = 'light';
 appearance.dispatch('change');
-check('Heller Modus stellt das ursprüngliche Maskottchen wieder her',
+check('Heller Modus nutzt dieselbe Figur',
   document.documentElement.dataset.theme === 'light'
   && byId('themeColor').attrs.content === '#ffffff'
-  && byId('roleMascotImage').src.endsWith('.jpeg'));
+  && byId('roleMascotImage').src === mascotBeforeAppearanceChange);
 if (process.argv[2]) {
  localStorage.clear();
  const legacy=JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));

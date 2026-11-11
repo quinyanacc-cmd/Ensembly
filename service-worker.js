@@ -1,4 +1,4 @@
-const CACHE = "ensembly-v6-5-1";
+const CACHE = "ensembly-v6-5-2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,20 +8,13 @@ const ASSETS = [
   "./logo.png",
   "./morning-header.jpg",
   "./evening-header.jpg",
-  "./mascot-ich.jpeg",
-  "./mascot-vitalist.jpeg",
-  "./mascot-absolvent.jpeg",
-  "./mascot-unternehmer.jpeg",
-  "./mascot-muslim.jpeg",
-  "./mascot-wirt.jpeg",
-  "./mascot-familie.jpeg",
-  "./mascot-absolvent-dark.webp",
-  "./mascot-familie-dark.webp",
-  "./mascot-ich-dark.webp",
-  "./mascot-muslim-dark.webp",
-  "./mascot-unternehmer-dark.webp",
-  "./mascot-vitalist-dark.webp",
-  "./mascot-wirt-dark.webp"
+  "./mascot-absolvent.webp",
+  "./mascot-familie.webp",
+  "./mascot-ich.webp",
+  "./mascot-muslim.webp",
+  "./mascot-unternehmer.webp",
+  "./mascot-vitalist.webp",
+  "./mascot-wirt.webp"
 ];
 
 self.addEventListener("install", event => {

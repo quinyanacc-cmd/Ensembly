@@ -1,3 +1,13 @@
+# Ensembly 6.5.2
+
+Startseite und Streaks verwenden dieselbe Datumsleiste und denselben Kalender.
+Die sieben gelieferten JPEG-Maskottchen hatten einen weißen Hintergrund.
+Für die App wurde der Hintergrund entfernt und jede Figur als WebP mit
+Transparenz für beide Darstellungsmodi eingebunden.
+
+201 Logik- und Strukturprüfungen und 38 Prüfungen im DOM-Testmodell bestanden.
+Die Maskottchen wurden auf hellem und dunklem Grund visuell kontrolliert.
+
 # Ensembly 6.5.1
 
 Dunkle Farbpalette für Kopfbereich, Karten, Felder, Dialoge und Navigation.
