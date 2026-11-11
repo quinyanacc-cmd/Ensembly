@@ -1,4 +1,4 @@
-const CACHE = "ensembly-v6-5-0";
+const CACHE = "ensembly-v6-5-1";
 const ASSETS = [
   "./",
   "./index.html",
@@ -14,7 +14,14 @@ const ASSETS = [
   "./mascot-unternehmer.jpeg",
   "./mascot-muslim.jpeg",
   "./mascot-wirt.jpeg",
-  "./mascot-familie.jpeg"
+  "./mascot-familie.jpeg",
+  "./mascot-absolvent-dark.webp",
+  "./mascot-familie-dark.webp",
+  "./mascot-ich-dark.webp",
+  "./mascot-muslim-dark.webp",
+  "./mascot-unternehmer-dark.webp",
+  "./mascot-vitalist-dark.webp",
+  "./mascot-wirt-dark.webp"
 ];
 
 self.addEventListener("install", event => {

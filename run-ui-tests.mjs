@@ -67,7 +67,7 @@ const click=id=>byId(id).click();
 const query=(selector,fn)=>document.querySelectorAll(selector).find(fn);
 app.init();
 const day=app.todayISO();
-check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.5.0');
+check('App startet ohne fehlende Elemente',byId('appVersionLabel').textContent==='Ensembly 6.5.1');
 check('Der leere Tag bleibt offen',byId('roleHeroName').textContent===''&&byId('rolePickerWrap').hidden);
 check('Fünf Check-ins sind bedienbar',byId('checkinSlots').querySelectorAll('[data-open-checkin-slot]').length===5);
 query('[data-open-checkin-slot]',e=>e.dataset.openCheckinSlot==='morning').click();
@@ -136,6 +136,19 @@ query('.nav-button',e=>e.dataset.page==='streaks').click();click('confirmStreakA
 check('Geschützte Streaks bleiben zugänglich',byId('streaksPage').classes.has('active'));
 query('.nav-button',e=>e.dataset.page==='review').click();
 check('Rückkehr zur Hauptseite funktioniert',byId('reviewPage').classes.has('active')&&!byId('appHeader').hidden);
+const appearance = byId('appearance');
+appearance.value = 'dark';
+appearance.dispatch('change');
+check('Dunkelmodus passt Seitenfarbe und Maskottchen an',
+  document.documentElement.dataset.theme === 'dark'
+  && byId('themeColor').attrs.content === '#111214'
+  && byId('roleMascotImage').src.endsWith('-dark.webp'));
+appearance.value = 'light';
+appearance.dispatch('change');
+check('Heller Modus stellt das ursprüngliche Maskottchen wieder her',
+  document.documentElement.dataset.theme === 'light'
+  && byId('themeColor').attrs.content === '#ffffff'
+  && byId('roleMascotImage').src.endsWith('.jpeg'));
 if (process.argv[2]) {
  localStorage.clear();
  const legacy=JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));

@@ -1,3 +1,13 @@
+# Ensembly 6.5.1
+
+Dunkle Farbpalette für Kopfbereich, Karten, Felder, Dialoge und Navigation.
+Die Rollenmaskottchen haben im Dunkelmodus einen transparenten Hintergrund.
+Die Streaks-Datumsleiste hat feste 44-Pixel-Pfeiltasten. Alle neuen Bilder
+sind im Offline-Cache enthalten.
+
+201 Berechnungs- und Strukturprüfungen sowie 34 DOM-Bedienprüfungen bestanden.
+Die Darstellung auf einem iPhone wurde nicht am Gerät geprüft.
+
 # Ensembly 6.5.0
 
 Streaks hinzufügen, umbenennen und ausblenden. Historische Tagesdaten bleiben erhalten. Kalorien pro Mahlzeit und optionales Tagesziel. Darstellung System/Hell/Dunkel. Datumauswahl bei Streaks. Mitwachsender Dankbarkeitstext. Kompakter Aktivitäteneditor. Kennzahlen mit Vorperiodenvergleich.

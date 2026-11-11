@@ -883,7 +883,7 @@ function dayPointTotal(data, date) {
 }
 
 
-const APP_VERSION = "6.5.0";
+const APP_VERSION = "6.5.1";
 const SCHEMA_VERSION = 8;
 const STORAGE_NAMESPACE = "roleplay-v25";
 const ROUTINES_STORAGE_KEY = `${STORAGE_NAMESPACE}-routines`;
@@ -1138,13 +1138,21 @@ function roleSpeechText(roleName, date = selectedDate) {
   return lines[hash % lines.length];
 }
 
+function updateMascotImage(role = getRole(currentData?.role)) {
+  const image = $("roleMascotImage");
+  if (!image) return;
+  const original = ROLE_MASCOT_IMAGES[role.name] || ROLE_MASCOT_IMAGES["Ich-Person"];
+  const dark = document.documentElement.dataset.theme === "dark";
+  image.src = dark ? original.replace(".jpeg", "-dark.webp") : original;
+}
+
 function updateHeaderRoleUI(role = getRole(currentData?.role)) {
   const hasRole = Boolean(currentData?.role);
   if ($("roleHeroIcon")) { $("roleHeroIcon").textContent = hasRole ? role.emoji : ""; $("roleHeroIcon").hidden = !hasRole; }
   if ($("roleHeroName")) { $("roleHeroName").textContent = hasRole ? roleDisplayName(role.name) : ""; $("rolePickerWrap").hidden = !hasRole; }
   if ($("mascotQuote")) $("mascotQuote").textContent = hasRole ? roleSpeechText(role.name) : "Dein Tag darf sich entwickeln. Deine Aktivitäten zeigen, was heute im Vordergrund steht.";
   if ($("roleMascotImage")) {
-    $("roleMascotImage").src = ROLE_MASCOT_IMAGES[role.name] || ROLE_MASCOT_IMAGES["Ich-Person"];
+    updateMascotImage(role);
     $("roleMascotImage").alt = hasRole ? `${roleDisplayName(role.name)}-Maskottchen` : "";
   }
 }
@@ -3788,6 +3796,9 @@ function setupEnhancements() {
   function applyAppearance() {
     const setting = localStorage.getItem("ensembly-appearance") || "system";
     document.documentElement.dataset.theme = setting === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : setting;
+    const dark = document.documentElement.dataset.theme === "dark";
+    $("themeColor")?.setAttribute("content", dark ? "#111214" : "#ffffff");
+    updateMascotImage();
     if (appearance) appearance.value = setting;
   }
   if (appearance) {
